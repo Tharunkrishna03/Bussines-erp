@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Payment terms</title>
+    <style>
+        body {
+            background: #c1c2c4;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+        #preview-area {
+            width: 210mm;
+            min-height: 297mm;
+            margin: auto;
+            padding: 20px;
+            background: #fff;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+            border-radius: 5px;
+        }
+        .header, .details, .table, .summary, .terms, .signatures {
+            margin-bottom: 20px;
+        }
+        .flex {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 20px;
+        }
+        .flex-1 { flex: 1; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+        table th, table td {
+            border: 1px solid black;
+            padding: 5px;
+            text-align: left;
+        }
+        table th {
+            background: #f0f0f0;
+        }
+        .summary-box {
+            flex: 1;
+            border: 1px solid black;
+            padding: 10px;
+            min-width: 200px;
+        }
+        .summary-box p {
+            margin: 5px 0;
+        }
+        .terms ol {
+            padding-left: 20px;
+            margin: 0;
+        }
+        .signature {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 40px;
+        }
+        .signature img {
+            width: 80px;
+            height: 50px;
+        }
+    </style>
+</head>
+<body>
+<div id="preview-area">
+
+    <!-- Header -->
+    <div class="header flex" style="border-bottom:1px solid black; padding-bottom:10px;">
+        <img src="./logo.png" alt="Logo" style="width:100px; height:50px;">
+        <div style="text-align:right;">
+            <h2 style="margin:0; color:#0077b6;">TK POWER SOURCE</h2>
+            <p style="margin:2px 0; font-size:10px;">GSTIN: 33AACFV3825E2ZG</p>
+            <p style="margin:2px 0; font-size:10px;">Phone: 9344001577</p>
+            <p style="margin:2px 0; font-size:10px;">Email: tkpowersource@gmail.com</p>
+            <p style="margin:2px 0; font-size:10px;">72C Thanneerpanthal Colony, Annuparpalayam P.O, Tiruppur</p>
+        </div>
+    </div>
+
+    <!-- Billing / Invoice / Delivery -->
+    <div class="details flex" style="font-size:12px;">
+        <div class="flex-1">
+            <p style="font-weight:bold; margin-bottom:5px;">Billing Details</p>
+            <p><b>Biller Name:</b> TK POWER SOURCE</p>
+            <p><b>Address:</b> NO. 244/1, MUTHANAMPALAYAM ROAD, THIRUPUR</p>
+            <p><b>GSTIN:</b> 33AAICV4929J1ZZ</p>
+        </div>
+        <div class="flex-1">
+            <p style="font-weight:bold; margin-bottom:5px;">Invoice Details</p>
+            <p><b>Invoice No:</b> 25-4162</p>
+            <p><b>Date:</b> 2026-03-18</p>
+            <p><b>PO No:</b> 25-26/VAPO-009806</p>
+        </div>
+        <div class="flex-1">
+            <p style="font-weight:bold; margin-bottom:5px;">Delivery Address</p>
+            <p>VELAN POWERS</p>
+            <p>NO. 244/1, MUTHANAMPALAYAM ROAD</p>
+            <p>NALLUR, THIRUPUR</p>
+        </div>
+    </div>
+
+    <!-- Items Table -->
+    <div class="table">
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Item</th>
+                    <th>Qty</th>
+                    <th>Rate</th>
+                    <th>Disc(%)</th>
+                    <th>Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ item.item_name }}<br/><span style="font-size:11px; font-style:italic;">{{ item.description }}</span></td>
+                    <td>{{ item.quantity }}</td>
+                    <td>₹{{ item.rate }}</td>
+                    <td>{{ item.discount|default:"0" }}%</td>
+                    <td>₹{{ item.amount }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="6" style="text-align:center;">No items found</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Summary & Terms -->
+    <!-- Summary & Terms swapped -->
+<div class="flex" style="margin-top:20px; gap:20px; font-size:12px; display:flex; flex-direction: row-reverse;">
+
+    <!-- Summary Box on the Right -->
+    <div class="summary-box" style="padding:10px; border:1px solid black; min-width:220px;">
+        <p style="text-align:center; font-weight:bold; border-bottom:1px solid black; margin-bottom:10px;">
+            Summary<br/>Taxable amount & GST
+        </p>
+        {% for summary in dispatch_summaries %}
+        <div style="display:flex; justify-content: space-between; margin-bottom:5px;">
+            <span>Taxable:</span>
+            <span>₹{{ summary.taxable|default:0 }}</span>
+        </div>
+        <div style="display:flex; justify-content: space-between; margin-bottom:5px;">
+            <span>Tax:</span>
+            <span>₹{{ summary.tax|default:0 }}</span>
+        </div>
+        <div style="display:flex; justify-content: space-between; margin-bottom:5px;">
+            <span>Round Off:</span>
+            <span>₹{{ summary.roundoff|default:0 }}</span>
+        </div>
+        <hr/>
+        <div style="display:flex; justify-content: space-between; font-weight:bold;">
+            <span>Net Amount:</span>
+            <span>₹{{ summary.net|default:0 }}</span>
+        </div>
+        {% empty %}
+        <p>No dispatch summaries found.</p>
+        {% endfor %}
+    </div>
+
+    <!-- Payment Details on the Left -->
+    <div class="payment-details" style="border:1px solid black; padding:20px; flex:1; min-width:250px; font-size:12px; height: 100px;">
+        <p style="text-align:center; font-weight:bold; border-bottom:1px solid black; margin-bottom:10px;">Payment Details</p>
+
+        <div style="display:flex; justify-content: space-between; margin-bottom:5px;">
+            <span>Payment Terms:</span>
+            <span>30 Days</span>
+        </div>
+
+        <div style="display:flex; justify-content: space-between; margin-bottom:5px;">
+            <span>Due Date:</span>
+            <span>2026-04-17</span>
+        </div>
+
+        <div style="display:flex; justify-content: space-between; margin-bottom:5px;">
+            <span>Interest Beyond Due Date:</span>
+            <span>18%</span>
+        </div>
+    </div>
+
+</div>
+<!-- Remarks Box -->
+<div class="remarks-box" style="border:1px solid black; padding:10px; margin-top:20px; min-height:60px; font-size:12px;">
+    <p style="text-align:center; font-weight:bold; border-bottom:1px solid black; margin-bottom:10px;">
+        Remarks
+    </p>
+
+    {% for summary in dispatch_summaries %}
+        <p style="margin:0;">{{ summary.remarks|default:"No remarks available" }}</p>
+    {% empty %}
+        <p>No dispatch summaries found.</p>
+    {% endfor %}
+</div>
+            <div >
+  <h4>Terms & Conditions</h4>
+
+  <h5>Applicable Law & Jurisdiction</h5>
+  <p>
+    This Agreement shall be governed by and construed in accordance with the laws of Singapore.
+    All disputes arising out of, or in connection with, this Agreement, including any question regarding its existence,
+    validity or termination, shall be submitted to the exclusive jurisdiction of the competent courts in Oman.
+  </p>
+
+  <h5>Contract Formation</h5>
+  <p>
+    The Contract shall come into force only upon written Purchase Order (“PO”) from the Client or the signing of this quotation by both parties.
+    Any modification or variation must be agreed in writing by both parties.
+  </p>
+
+  <h5>Scope Limitations</h5>
+  <p>
+    The Supplier executes work strictly as per the agreed scope (material supply, surface preparation, application, inspections etc.).
+    Any additional work not clearly defined in the scope of work shall be treated as extra work, subject to separate agreement and additional charges.
+  </p>
+
+  <h5>Permits, Permissions & Site Conditions</h5>
+  <p>
+    The Client shall arrange and bear costs for all required permits, worksite access, safety clearances, and site utilities
+    (electricity, lighting, compressed air etc.). The Client shall ensure site conditions are suitable for the work
+    (e.g. ambient temperature, moisture) before execution begins. If these are beyond the product limitations, application can’t be carried out.
+  </p>
+
+  <h5>Safety, Environment & Compliance</h5>
+  <p>
+    Client shall ensure safety measures and equipment as required by law or regulatory bodies are in place. Supplier is not liable
+    for delays or incidents arising from Client’s failure to comply. If the situation needs the shutdown, it should be provided.
+  </p>
+
+  <h5>Materials & Workmanship Warranty</h5>
+  <p>
+    Supplier warrants that materials supplied (MetaLine 785 Elastomer) will conform to manufacturer’s specifications.
+    Supplier also warrants the workmanship of any application work it performs for a period of twelve (12) months from successful completion.
+    Warranty does not cover failures arising from misuse, impact damage, exposure to chemicals beyond specification, poor maintenance,
+    or conditions not disclosed to Supplier.
+  </p>
+
+  <h5>Limitation of Liability</h5>
+  <p>
+    Supplier shall not be liable for any consequential, indirect, special or punitive damages, loss of profit, loss of revenue or loss of opportunity,
+    whether arising from breach of contract, negligence, or otherwise, to the extent permitted by Omani law. Any liability of Supplier
+    (whether in contract, tort or otherwise) shall in aggregate not exceed the total amount paid or payable by the Client under this contract.
+  </p>
+
+  <h5>Force Majeure</h5>
+  <p>
+    Neither party shall be liable for any delay or failure to perform obligations under this Agreement due to acts or events beyond its reasonable control
+    including, but not limited to, acts of God, storms, flood, fire, governmental regulation or order, industrial disputes or shortages of labor or materials.
+    In case of force majeure, the affected party shall promptly notify the other in writing, and performance obligations shall be suspended
+    for the duration of the event.
+  </p>
+
+  <h5>Payment Terms</h5>
+  <p>
+    Unless otherwise agreed in writing:
+    <ul>
+      <li>50% of the total contract value shall be paid as advance at time of PO execution.</li>
+      <li>30% upon safe delivery of supplied material at site.</li>
+      <li>20% upon successful completion of application, final inspection, and acceptance in writing by Client.</li>
+    </ul>
+    Payments shall be made in OMR into Supplier’s nominated bank account. Delayed payments shall bear interest at a rate of 5% per month (or as per law) from due date until actual payment.
+  </p>
+
+  <h5>Delivery Schedule & Delays</h5>
+  <p>
+    Supply of material: 10-12 weeks from receipt of PO & advance. Application works: schedule to be mutually agreed based on site readiness.
+    The Supplier shall use reasonable endeavours to meet the agreed delivery/application schedule. Any schedule is indicative, and Supplier
+    shall not be held responsible for delays caused by Client, site readiness, permit delays, weather, or other external factors.
+    In case of delay from Supplier beyond a reasonable period, the Client may discuss but shall not unilaterally cancel the contract without Supplier’s consent.
+  </p>
+
+  <h5>Delay Charges</h5>
+  <p>In the event that the site is not ready due to delays attributable to the client, a charge of OMR 200.00 per day shall apply.</p>
+
+  <h5>Inspection & Acceptance</h5>
+  <p>
+    The Client shall inspect or witness inspection of materials upon delivery and the application upon completion. Any defects or non-conformance
+    must be reported in writing within 3 days of delivery or completion. If no written claim is made in time, the materials/work shall be deemed accepted.
+  </p>
+
+  <h5>Sub-contracting</h5>
+  <p>
+    Supplier may sub-contract any part of the scope of work provided the subcontractor is competent and complies with all applicable laws and quality standards.
+    Nevertheless, Supplier remains fully responsible for all work as if performed by it.
+  </p>
+
+  <h5>Insurance & Indemnity</h5>
+  <p>
+    The Supplier shall maintain appropriate insurance for its operations including public liability, worker’s compensation, material transit etc.
+    The Client shall indemnify and hold harmless the Supplier from any claims, liabilities, losses or damages arising from Client’s acts, omissions,
+    or provision of incorrect information.
+  </p>
+
+  <h5>Intellectual Property Rights</h5>
+  <p>
+    All intellectual property rights (including but not limited to patents, trademarks, trade secrets, design data) in materials, designs,
+    technical specifications, procedures and documentation provided by Supplier remain the Supplier’s property.
+    Client shall not copy or use them except as necessary for performance of Client’s obligations under this contract.
+  </p>
+
+  <h5>Confidentiality</h5>
+  <p>
+    Each party shall keep confidential all trade secrets, technical, commercial and financial information disclosed by the other, both during and after the contract,
+    for a period of 2 years, unless such information is in the public domain or required to be disclosed by law.
+  </p>
+
+  <h5>Termination</h5>
+  <p>
+    Either party may terminate this Agreement in writing if the other party commits a material breach of the contract and fails to remedy the same
+    within 40 days of a written notice. Client shall pay for all work done, materials bought, costs incurred up to the date of termination.
+  </p>
+
+  <h5>Severability</h5>
+  <p>
+    If any provision of this Agreement is held invalid, illegal or unenforceable by a court of competent jurisdiction in Oman,
+    that provision shall be severed to the minimum extent necessary and the remainder of the Agreement shall remain valid and enforceable.
+  </p>
+
+  <h5>Ownership & Risk</h5>
+  <p>
+    Title and risk of loss for supplied materials pass to Client upon delivery to site (unless otherwise agreed).
+    For work which includes application, risk associated with workmanship or damage before handover remains with Supplier until final acceptance.
+  </p>
+
+ 
+
+  <h5>Offer Validity</h5>
+  <p>This quotation is valid for a period of 30 days from the date of issue.</p>
+</div>
+
+    <!-- Signatures -->
+    <div class="signature" style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 40px;">
+    <!-- Customer Signature -->
+    <div style="text-align: center;">
+        <div style="border-bottom: 1px solid black; width: 150px; margin-bottom: 5px; height: 50px;"></div>
+        <p style="margin: 0;">Customer Signature</p>
+    </div>
+
+    <!-- Authorized Signature -->
+    <div style="text-align: center;">
+        <img src="./logo.png" alt="stamp" style="width:80px; height:50px; display:block; margin-bottom:5px;">
+        <p style="margin: 0;">Authorized Signature</p>
+    </div>
+</div>
+</div>
+</div>
+</body>
+</html>

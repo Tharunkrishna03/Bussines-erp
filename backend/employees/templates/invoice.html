@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>{{ terms_type|default:"Invoice" }}</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 14mm;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 11px;
+            color: #111;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid #111;
+            padding: 6px;
+            vertical-align: top;
+        }
+
+        .no-border td {
+            border: none;
+            padding: 0;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        .section-title {
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+
+        .box {
+            border: 1px solid #111;
+            padding: 8px;
+            min-height: 42px;
+        }
+
+        .signature td {
+            border: none;
+            padding-top: 28px;
+        }
+
+        .line {
+            border-top: 1px solid #111;
+            display: inline-block;
+            min-width: 140px;
+            padding-top: 4px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <table class="no-border" style="border-bottom: 1px solid #111; margin-bottom: 10px;">
+        <tr>
+            <td style="width: 25%;">
+                {% if logo_data_uri %}
+                <img src="{{ logo_data_uri }}" alt="Logo" style="width: 90px; height: auto;">
+                {% endif %}
+            </td>
+            <td class="text-right" style="width: 75%;">
+                <div style="font-size: 20px; font-weight: bold;">{{ company.name }}</div>
+                <div>GSTIN: {{ company.gstin }}</div>
+                <div>Phone: {{ company.phone }}</div>
+                <div>Email: {{ company.email }}</div>
+                <div>{{ company.address }}</div>
+            </td>
+        </tr>
+    </table>
+
+    <table style="margin-bottom: 10px;">
+        <tr>
+            <td>
+                <div class="section-title">Billing Details</div>
+                <div>{{ billing.name }}</div>
+                <div>{{ billing.address }}</div>
+                {% if billing.gstin %}<div>GSTIN: {{ billing.gstin }}</div>{% endif %}
+            </td>
+            <td>
+                <div class="section-title">Invoice Details</div>
+                <div>No: {{ invoice.no }}</div>
+                <div>Date: {{ invoice.date }}</div>
+                <div>PO / Ref: {{ invoice.po }}</div>
+                {% if invoice.bill_type %}<div>Bill Type: {{ invoice.bill_type }}</div>{% endif %}
+            </td>
+            <td>
+                <div class="section-title">Delivery Address</div>
+                <div>{{ delivery.name }}</div>
+                <div>{{ delivery.address }}</div>
+                {% if payment.dispatch_through %}<div>Dispatch: {{ payment.dispatch_through }}</div>{% endif %}
+            </td>
+        </tr>
+    </table>
+
+    <table style="margin-bottom: 10px;">
+        <thead>
+            <tr>
+                <th style="width: 6%;">#</th>
+                <th style="width: 34%;">Item</th>
+                <th style="width: 12%;">Qty</th>
+                <th style="width: 14%;">Rate</th>
+                <th style="width: 12%;">Disc %</th>
+                <th style="width: 22%;">Amount</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in items %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>
+                    {{ item.item_name }}
+                    {% if item.description %}<br>{{ item.description }}{% endif %}
+                </td>
+                <td>{{ item.quantity }}</td>
+                <td>{{ currency.prefix }} {{ item.rate|floatformat:currency.precision }}</td>
+                <td>{{ item.discount|floatformat:2 }}</td>
+                <td>{{ currency.prefix }} {{ item.amount|floatformat:currency.precision }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" class="text-right">No items found</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <table style="margin-bottom: 10px;">
+        <tr>
+            <td style="width: 50%;">
+                <div class="section-title">Payment Details</div>
+                <div class="box">
+                    <div>Terms Type: {{ payment.terms_type }}</div>
+                    <div>Terms: {{ payment.terms }}</div>
+                    <div>Due Date: {{ payment.due_date }}</div>
+                    <div>Interest: {{ payment.interest }}</div>
+                    <div>Credit Days: {{ payment.credit_days }}</div>
+                </div>
+            </td>
+            <td style="width: 50%;">
+                <div class="section-title">Summary</div>
+                <table>
+                    <tr>
+                        <td>Taxable</td>
+                        <td class="text-right">{{ currency.prefix }} {{ summary.taxable|floatformat:currency.precision }}</td>
+                    </tr>
+                    <tr>
+                        <td>Tax</td>
+                        <td class="text-right">{{ currency.prefix }} {{ summary.tax|floatformat:currency.precision }}</td>
+                    </tr>
+                    <tr>
+                        <td>Discount</td>
+                        <td class="text-right">{{ currency.prefix }} {{ summary.discount|floatformat:currency.precision }}</td>
+                    </tr>
+                    <tr>
+                        <td>Subtotal</td>
+                        <td class="text-right">{{ currency.prefix }} {{ summary.subtotal|floatformat:currency.precision }}</td>
+                    </tr>
+                    <tr>
+                        <td>Round Off</td>
+                        <td class="text-right">{{ currency.prefix }} {{ summary.roundoff|floatformat:currency.precision }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Net Amount</strong></td>
+                        <td class="text-right"><strong>{{ currency.prefix }} {{ summary.net|floatformat:currency.precision }}</strong></td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+
+    <table style="margin-bottom: 10px;">
+        <tr>
+            <td>
+                <div class="section-title">Remarks</div>
+                <div class="box">{{ dispatch.remarks|default:"-" }}</div>
+            </td>
+            <td>
+                <div class="section-title">Additional Terms</div>
+                <div class="box">{{ payment.terms|default:"-" }}</div>
+            </td>
+        </tr>
+    </table>
+
+    <table class="signature">
+        <tr>
+            <td style="width: 50%;">
+                <span class="line">Customer Signature</span>
+            </td>
+            <td style="width: 50%; text-align: right;">
+                <span class="line">Authorized Signature</span>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
