@@ -105,17 +105,62 @@ class DispatchSummary(models.Model):
 
 
 class SalesServiceRequest(models.Model):
+    CONTACT_MODE_PHONE = "phone"
+    CONTACT_MODE_EMAIL = "email"
+    CONTACT_MODE_CHOICES = (
+        (CONTACT_MODE_PHONE, "Phone"),
+        (CONTACT_MODE_EMAIL, "Email"),
+    )
+    PLANNING_TYPE_VERBAL = "verbal"
+    PLANNING_TYPE_QUOTE_AFTER = "quote_after"
+    PLANNING_TYPE_QUOTE_AS_PER_REQUEST = "quote_as_per_request"
+    PLANNING_TYPE_CHOICES = (
+        (PLANNING_TYPE_VERBAL, "Verbal"),
+        (PLANNING_TYPE_QUOTE_AFTER, "Quote after"),
+        (PLANNING_TYPE_QUOTE_AS_PER_REQUEST, "Quote as per request"),
+    )
+    REQUEST_TYPE_MANUFACTURING = "manufacturing"
+    REQUEST_TYPE_SERVICE = "service"
+    REQUEST_TYPE_CHOICES = (
+        (REQUEST_TYPE_MANUFACTURING, "Manufacturing"),
+        (REQUEST_TYPE_SERVICE, "Service"),
+    )
+
     referenceNo = models.CharField(max_length=20, unique=True)
+    modeOfContact = models.CharField(
+        max_length=20,
+        choices=CONTACT_MODE_CHOICES,
+        blank=True,
+        default="",
+    )
     emailReferenceNumber = models.CharField(max_length=100, blank=True, default="")
     requestDate = models.DateField()
     requiredDeliveryDate = models.DateField()
     clientName = models.CharField(max_length=120)
     companyName = models.CharField(max_length=160)
-    phoneNo = models.CharField(max_length=20)
-    email = models.EmailField()
-    itemName = models.CharField(max_length=160)
-    quantity = models.PositiveIntegerField()
-    unit = models.CharField(max_length=40)
+    phoneNo = models.CharField(max_length=20, blank=True, default="")
+    email = models.EmailField(blank=True, default="")
+    requestType = models.CharField(
+        max_length=20,
+        choices=REQUEST_TYPE_CHOICES,
+        blank=True,
+        default="",
+    )
+    batteryServices = models.JSONField(blank=True, default=list)
+    scopeArea = models.TextField(blank=True, default="")
+    planningType = models.CharField(
+        max_length=30,
+        choices=PLANNING_TYPE_CHOICES,
+        blank=True,
+        default="",
+    )
+    planStartDate = models.DateField(blank=True, null=True)
+    planEndDate = models.DateField(blank=True, null=True)
+    planningRemarks = models.TextField(blank=True, default="")
+    manufacturingItems = models.JSONField(blank=True, default=list)
+    itemName = models.CharField(max_length=160, blank=True, default="")
+    quantity = models.PositiveIntegerField(default=0)
+    unit = models.CharField(max_length=40, blank=True, default="")
     paymentTerms = models.CharField(max_length=80)
     taxPreference = models.CharField(max_length=80)
     deliveryLocation = models.CharField(max_length=200)
@@ -126,6 +171,91 @@ class SalesServiceRequest(models.Model):
 
     def __str__(self):
         return self.referenceNo
+
+
+class Quotation(models.Model):
+    APPROVAL_PENDING = "pending"
+    APPROVAL_APPROVED = "approved"
+    APPROVAL_DECLINED = "declined"
+    APPROVAL_STATUS_CHOICES = (
+        (APPROVAL_PENDING, "Pending"),
+        (APPROVAL_APPROVED, "Approved"),
+        (APPROVAL_DECLINED, "Declined"),
+    )
+    CLIENT_STATUS_PENDING = "pending"
+    CLIENT_STATUS_ACCEPTED = "accepted"
+    CLIENT_STATUS_REJECTED = "rejected"
+    CLIENT_STATUS_CHOICES = (
+        (CLIENT_STATUS_PENDING, "Pending"),
+        (CLIENT_STATUS_ACCEPTED, "Accepted"),
+        (CLIENT_STATUS_REJECTED, "Rejected"),
+    )
+
+    salesServiceRequest = models.ForeignKey(
+        SalesServiceRequest,
+        on_delete=models.CASCADE,
+        related_name="quotations",
+    )
+    costEstimationSheet = models.ForeignKey(
+        "CostEstimationSheet",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="quotations",
+    )
+    quotationCode = models.CharField(max_length=20, unique=True)
+    quotationDate = models.DateField()
+    expiryDate = models.DateField()
+    quoteValidityDays = models.PositiveIntegerField(default=12)
+    # Keep the API/frontend field name while matching the migrated DB column.
+    revisedNo = models.PositiveIntegerField(default=0, db_column="revisionNo")
+    attentionName = models.CharField(max_length=120)
+    companyName = models.CharField(max_length=160, blank=True, default="")
+    referenceNo = models.CharField(max_length=20, blank=True, default="")
+    costEstimationNo = models.CharField(max_length=20, blank=True, default="")
+    scopeDetails = models.JSONField(blank=True, default=list)
+    rfqScope = models.JSONField(blank=True, default=list)
+    rfqRemarks = models.TextField(blank=True, default="")
+    rfqContactMode = models.CharField(max_length=20, blank=True, default="")
+    costBreakdown = models.JSONField(blank=True, default=dict)
+    totalCost = models.FloatField(default=0)
+    paymentTermsType = models.CharField(max_length=80, blank=True, default="")
+    paymentTerms = models.TextField(blank=True, default="")
+    deliveryTermsType = models.CharField(max_length=80, blank=True, default="")
+    deliveryTerms = models.TextField(blank=True, default="")
+    termsType = models.CharField(max_length=100, blank=True, default="")
+    terms = models.TextField(blank=True, default="")
+    currencyName = models.CharField(max_length=100, default="India")
+    currencyCode = models.CharField(max_length=10, default="INR")
+    currencySymbol = models.CharField(max_length=10, default="\u20b9")
+    currencyRateToInr = models.FloatField(default=1)
+    currencyAmountLabel = models.CharField(max_length=50, default="Rupees")
+    sentToHead = models.BooleanField(default=False)
+    hodStatus = models.CharField(
+        max_length=20,
+        choices=APPROVAL_STATUS_CHOICES,
+        default=APPROVAL_PENDING,
+    )
+    hodComment = models.TextField(blank=True, default="")
+    mdStatus = models.CharField(
+        max_length=20,
+        choices=APPROVAL_STATUS_CHOICES,
+        default=APPROVAL_PENDING,
+    )
+    mdComment = models.TextField(blank=True, default="")
+    clientStatus = models.CharField(
+        max_length=20,
+        choices=CLIENT_STATUS_CHOICES,
+        default=CLIENT_STATUS_PENDING,
+    )
+    clientComment = models.TextField(blank=True, default="")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ("-created_at", "-id")
+
+    def __str__(self):
+        return self.quotationCode or f"Quotation {self.pk}"
 
 
 class CostEstimationRate(models.Model):
@@ -218,6 +348,29 @@ class CostEstimationSheet(models.Model):
             return self.APPROVAL_DECLINED
 
         return self.APPROVAL_PENDING
+
+    def has_quotation(self):
+        prefetched_objects = getattr(self, "_prefetched_objects_cache", {})
+        if "quotations" in prefetched_objects:
+            return bool(prefetched_objects["quotations"])
+        return self.quotations.exists()
+
+    def is_locked_for_editing(self):
+        if self.has_quotation():
+            return True
+
+        overall_status = self.get_overall_status()
+        return self.sentToHead and overall_status == self.APPROVAL_PENDING
+
+    def is_workflow_locked(self):
+        if self.has_quotation():
+            return True
+
+        overall_status = self.get_overall_status()
+        if overall_status == self.APPROVAL_APPROVED:
+            return True
+
+        return self.sentToHead and overall_status == self.APPROVAL_PENDING
 
 
 class CostEstimationSheetRow(models.Model):
